@@ -2,6 +2,7 @@
 from __future__ import print_function
 from keras.layers import Dense, Activation
 from keras.models import Sequential, model_from_json
+import numpy as np
 import os.path
 import json
 import os
@@ -27,6 +28,18 @@ class Brain(object):
             optimizer="adam",
             loss="mean_squared_logarithmic_error",
             metrics=["accuracy"])
+
+    def _format_named(s, data):
+        """ Format dict list into list list. """
+        if not data:
+            raise RuntimeError("Empty data.")
+        cols = s._metadata.get("cols", [])
+        res = np.array()
+        for row in data:
+            if not cols:
+                cols = row.keys()
+            res.append(np.array([row[a] for a in cols]))
+        return res
 
     def load_state(s, path):
         if not os.path.isdir(path):
@@ -60,8 +73,8 @@ class Brain(object):
         return s
 
     def train(s, features, labels, epochs=3000, debug=False):
-        if not len(features) or not len(labels):
-            raise RuntimeError("Provided no features or labels")
+        features = s._format_named(features)
+        labels = s._format_named(labels)
         if not s._model:
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
@@ -74,15 +87,16 @@ class Brain(object):
         return s
 
     def evaluate(s, features, labels, debug=False):
-        if not len(features) or not len(labels):
-            raise RuntimeError("Provided no features or labels")
+        features = s._format_named(features)
+        labels = s._format_named(labels)
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         return s._model.evaluate(features, labels, verbose=1 if debug else 0)
 
     def predict(s, features):
-        if not len(features):
-            raise RuntimeError("Provided no features or labels")
+        features = s._format_named(features)
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
-        return s._model.predict(features)
+        res = s._model.predict(features)
+        # reconstruct named columns
+        return [{c: float(b) for b, c in zip(a, s._metadata["cols"])} for a in res]

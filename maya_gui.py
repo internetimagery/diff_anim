@@ -1,7 +1,6 @@
 # GUI
 from __future__ import print_function
 import maya.cmds as cmds
-import numpy as np
 import maya_utils
 import os.path
 import learn
@@ -80,8 +79,8 @@ class Window(object):
                 break
         # Format data into vectors
         frames = source_data.keys() # Maintain frame order and column order
-        source_data = np.array([np.array([source_data[a][b] for b in brain["cols"]]) for a in frames])
-        expect_data = np.array([np.array([expect_data[a][b] for b in brain["cols"]]) for a in frames])
+        source_data = [source_data[a] for a in frames]
+        expect_data = [expect_data[a] for a in frames]
 
         brain.train(source_data, expect_data).save_state(train_path)
         print("Training complete. Accuracy:", brain.evaluate(source_data, expect_data))
@@ -97,9 +96,9 @@ class Window(object):
 
         data = maya_utils.collect_anim()
         frames = data.keys()
-        format_dict = np.array([np.array([data[a][b] for b in brain["cols"]]) for a in frames])
+        format_dict = [data[a] for a in frames]
         keys = brain.predict(format_dict)
 
         for frame, row in zip(frames, keys):
-            for attr, val in zip(brain["cols"], row):
-                cmds.setKeyframe(attr, v=float(val), t=frame)
+            for attr, val in row.items():
+                cmds.setKeyframe(attr, v=val, t=frame)
