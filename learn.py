@@ -7,7 +7,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up
 
 class Brain(object):
     def __init__(s):
-        s.model = None
+        s._model = None
 
     def load_state(s, path):
         pass
@@ -15,9 +15,9 @@ class Brain(object):
     def save_state(s, path):
         pass
 
-    def learn(s, features, labels):
-        if not s.model:
-            s.model = model = Sequential()
+    def train(s, features, labels, epochs=1000):
+        if not s._model:
+            s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
             model.add(Dense(512))
             model.add(Dense(len(labels[0])))
@@ -26,13 +26,16 @@ class Brain(object):
                 loss="mse",
                 metrics=["accuracy"])
 
-        s.model.fit(features, labels, epochs=5000, verbose=0)
+        print("Training. Please wait...")
+        s._model.fit(features, labels, epochs=epochs, verbose=0)
         return s
 
     def evaluate(s, features, labels):
-        if not s.model:
+        if not s._model:
             raise RuntimeError("Model not yet created")
-        return s.model.evaluate(features, labels, verbose=0)
+        return s._model.evaluate(features, labels, verbose=0)
 
     def predict(s, features):
-        return model.predict(features)
+        if not s._model:
+            raise RuntimeError("Model not yet created")
+        return s._model.predict(features)
