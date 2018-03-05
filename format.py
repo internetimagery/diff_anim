@@ -21,7 +21,7 @@ def save(path, header=None, data=None):
 
     # Add general metadata
     header["user"] = getpass.getuser()
-    header["created"] = datetime.datetime.now()
+    header["created"] = str(datetime.datetime.now())
 
     # Write new file
     with open(tmp, "wb") as f:

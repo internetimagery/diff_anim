@@ -4,6 +4,8 @@ import maya.cmds as cmds
 import format
 import time
 
+NUM_TYPES = set(["double", "doubleLinear", "doubleAngle"])
+
 def strip_namespace(name):
     return name.rsplit(":", 1)[-1]
 
@@ -38,7 +40,7 @@ def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_col="[FR
         attrs = [a+"."+b for a in selection for b in cmds.listAttr(a, k=True) or []]
 
     # Filter attrs
-    attrs = [a for a in attrs if cmds.getAttr(a, type=True) == "double"]
+    attrs = [a for a in attrs if cmds.getAttr(a, type=True) in NUM_TYPES]
 
     diff = Fend - Fstart
     frame = Fstart
