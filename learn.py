@@ -88,7 +88,7 @@ class Brain(object):
             s._compile()
         print("Training. Please wait...")
         res = s._model.fit(features, labels, epochs=epochs, verbose=1 if debug else 0)
-        print(dir(res))
+        print(res.history)
         return s
 
     def evaluate(s, features, labels, debug=False):

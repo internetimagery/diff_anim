@@ -24,7 +24,7 @@ class FrameRange(object):
             v1=cmds.playbackOptions(q=True, min=True),
             v2=cmds.playbackOptions(q=True, max=True),
             v3=1.0)
-    def get_values():
+    def get_values(s):
         return cmds.floatFieldGrp(s._gui, q=True, v=True)
 
 
