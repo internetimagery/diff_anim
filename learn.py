@@ -15,7 +15,7 @@ class Brain(object):
     def save_state(s, path):
         pass
 
-    def train(s, features, labels, epochs=1000):
+    def train(s, features, labels, epochs=2000, debug=False):
         if not s._model:
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
@@ -27,13 +27,13 @@ class Brain(object):
                 metrics=["accuracy"])
 
         print("Training. Please wait...")
-        s._model.fit(features, labels, epochs=epochs, verbose=0)
+        s._model.fit(features, labels, epochs=epochs, verbose=1 if debug else 0)
         return s
 
-    def evaluate(s, features, labels):
+    def evaluate(s, features, labels, debug=False):
         if not s._model:
             raise RuntimeError("Model not yet created")
-        return s._model.evaluate(features, labels, verbose=0)
+        return s._model.evaluate(features, labels, verbose=1 if debug else 0)
 
     def predict(s, features):
         if not s._model:
