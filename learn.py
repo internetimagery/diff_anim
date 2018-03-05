@@ -19,7 +19,7 @@ class Brain(object):
         return s._metadata[item]
 
     def __setitem__(s, item, val):
-        return s._metadata[item] = val
+        s._metadata[item] = val
 
     def _compile(s):
         s._model.compile(
@@ -59,7 +59,7 @@ class Brain(object):
         s._model.save_weights(weight_path)
         return s
 
-    def train(s, features, labels, epochs=2000, debug=False):
+    def train(s, features, labels, epochs=3000, debug=False):
         if not s._model:
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))

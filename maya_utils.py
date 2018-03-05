@@ -67,7 +67,7 @@ def import_anim(path, namespace=""):
     return res
 
 def filter_frames(data1, data2):
-    """ Filter out only data that has frames in common """
+    """ Filter out only data that has frames and attributes in common """
     res1 = []
     res2 = []
     cols = None
