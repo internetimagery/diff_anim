@@ -36,18 +36,21 @@ class Window(object):
 
         # Apply
         apply_col = cmds.columnLayout(adj=True, p=tabs)
+        cmds.text(l="Apply training to current animation, on selected objects.")
         s._apply_path = PathBrowse("Training Data (training):", False, fm=3)
         s._apply_range = FrameRange()
         cmds.button(l="Apply to selected!", c=s.apply)
 
         # Export
         export_col = cmds.columnLayout(adj=True, p=tabs)
+        cmds.text(l="Export animation from selected objects to be used for later training.")
         s._export_path = PathBrowse("Export (anim):", "*.anim", fm=0)
         s._export_range = FrameRange()
         cmds.button(l="Export Animation", c=s.export)
 
         # Train
         train_col = cmds.columnLayout(adj=True, p=tabs)
+        cmds.text(l="Learn differences between animation data.")
         s._train_path_train = PathBrowse("Training Data (training):", False, fm=3)
         s._train_path_source = PathBrowse("Source (anim):", "*.anim", fm=1)
         s._train_path_expect = PathBrowse("Expected (anim):", "*.anim", fm=1)

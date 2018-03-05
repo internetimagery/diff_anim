@@ -83,7 +83,7 @@ class Brain(object):
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
             model.add(Dense(512))
-            model.add(Dense(512))
+            model.add(Dense(256))
             model.add(Dense(len(labels[0])))
             s._compile()
         print("Training. Please wait...")
