@@ -1,7 +1,9 @@
 # Anim exports
 
 from __future__ import print_function
+import datetime
 import os.path
+import getpass
 import shutil
 import json
 import csv
@@ -16,6 +18,11 @@ def save(path, header=None, data=None):
     header = header or {}
     data = data or []
     tmp = path + ".tmp"
+
+    # Add general metadata
+    header["user"] = getpass.getuser()
+    header["created"] = datetime.datetime.now()
+
     # Write new file
     with open(tmp, "wb") as f:
         f.write(json.dumps(header, indent=4)+"\n")

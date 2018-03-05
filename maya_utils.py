@@ -12,12 +12,12 @@ def add_namespace(namespace, name):
         return namespace + ":" + name
     return name
 
-def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_name="[FRAME]"):
+def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_col="[FRAME]"):
     """ Export animation file """
 
     header = {
-        "frame_name": frame_name,
-        "created": time.time()
+        "frame_col": frame_col,
+        "scene": cmds.file(q=True, sn=True)
     }
     data = []
 
@@ -45,7 +45,7 @@ def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_name="[F
     while frame < Fend:
         cmds.currentTime(frame)
         d = {strip_namespace(a): cmds.getAttr(a) for a in attrs}
-        d[frame_name] = frame
+        d[frame_col] = frame
         data.append(d)
         frame += step
     format.save(path, header, data)
@@ -53,13 +53,13 @@ def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_name="[F
 def import_anim(path, namespace=""):
     """ Pull back animation """
     header, data = format.load(path)
-    frame_name = header.get("frame_name")
-    if not frame_name:
+    frame_col = header.get("frame_col")
+    if not frame_col:
         raise RuntimeError("Frame name missing...")
 
     res = {}
     for row in data:
-        fr = row[frame_name]
-        del row[frame_name]
+        fr = row[frame_col]
+        del row[frame_col]
         res[fr] = {add_namespace(namespace, a): float(row[a]) for a in row}
     return res
