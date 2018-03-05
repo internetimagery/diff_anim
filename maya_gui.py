@@ -17,6 +17,17 @@ class PathBrowse(object):
         if path:
             cmds.textFieldButtonGrp(s._gui, e=True, tx=path[0])
 
+class FrameRange(object):
+    def __init__(s):
+        s._gui = cmds.floatFieldGrp(
+            nf=3, pre=2, l="Frame Range (start / end / step)"
+            v1=cmds.playbackOptions(q=True, min=True),
+            v2=cmds.playbackOptions(q=True, max=True),
+            v3=1.0)
+    def get_values():
+        return cmds.floatFieldGrp(s._gui, q=True, v=True)
+
+
 class Window(object):
     def __init__(s):
         cmds.window(t="Anim Train!")
@@ -25,19 +36,21 @@ class Window(object):
 
         # Apply
         apply_col = cmds.columnLayout(adj=True, p=tabs)
-        s.apply_path = PathBrowse("Training Data (training):", False, fm=3)
+        s._apply_path = PathBrowse("Training Data (training):", False, fm=3)
+        s._apply_range = FrameRange()
         cmds.button(l="Apply to selected!", c=s.apply)
 
         # Export
         export_col = cmds.columnLayout(adj=True, p=tabs)
-        s.export_path = PathBrowse("Export (anim):", "*.anim", fm=0)
+        s._export_path = PathBrowse("Export (anim):", "*.anim", fm=0)
+        s._export_range = FrameRange()
         cmds.button(l="Export Animation", c=s.export)
 
         # Train
         train_col = cmds.columnLayout(adj=True, p=tabs)
-        s.train_path_train = PathBrowse("Training Data (training):", False, fm=3)
-        s.train_path_source = PathBrowse("Source (anim):", "*.anim", fm=1)
-        s.train_path_expect = PathBrowse("Expected (anim):", "*.anim", fm=1)
+        s._train_path_train = PathBrowse("Training Data (training):", False, fm=3)
+        s._train_path_source = PathBrowse("Source (anim):", "*.anim", fm=1)
+        s._train_path_expect = PathBrowse("Expected (anim):", "*.anim", fm=1)
         cmds.button(l="Train", c=s.train)
 
         cmds.tabLayout(tabs, e=True, tl=[
@@ -48,18 +61,20 @@ class Window(object):
 
     def export(s, *_):
         """ Export animation to file """
-        path = s.export_path.get_text()
+        path = s._export_path.get_text()
+        Fstart, Fend, Fstep = s._export_range.get_values()
         if not os.path.isdir(os.path.dirname(path)):
             raise RuntimeError("Export path does not exist: %s" % path)
         print("Exporting animation to:", path)
-        data = maya_utils.collect_anim()
+        cb = maya_utils.get_channelbox()
+        data = maya_utils.collect_anim(Fstart=Fstart, Fend=Fend, Fstep=Fstep, attrs=cb)
         maya_utils.export_anim(path, data)
 
     def train(s, *_):
         """ Begin/continue training on new data """
-        train_path = s.train_path_train.get_text()
-        source_path = s.train_path_source.get_text()
-        expect_path = s.train_path_expect.get_text()
+        train_path = s._train_path_train.get_text()
+        source_path = s._train_path_source.get_text()
+        expect_path = s._train_path_expect.get_text()
         if not os.path.isdir(train_path) or not os.path.isfile(source_path) or not os.path.isfile(expect_path):
             raise RuntimeError("One or more paths are invalid.")
         print("Training. Please wait. This can take a while.")
@@ -87,14 +102,15 @@ class Window(object):
 
     def apply(s, *_):
         """ Apply training to animation """
-        path = s.apply_path.get_text()
+        path = s._apply_path.get_text()
+        Fstart, Fend, Fstep = s._export_range.get_values()
         if not os.path.isdir(path):
             raise RuntimeError("Path does not exist: %s" % path)
         print("Applying animation. \"This is what we've trained for!\"")
 
         brain = learn.Brain().load_state(path)
 
-        data = maya_utils.collect_anim()
+        data = maya_utils.collect_anim(Fstart=Fstart, Fend=Fend, Fstep=Fstep)
         frames = data.keys()
         format_dict = [data[a] for a in frames]
         keys = brain.predict(format_dict)

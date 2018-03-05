@@ -15,17 +15,20 @@ def add_namespace(namespace, name):
         return namespace + ":" + name
     return name
 
-def collect_anim(Fstart=None, Fend=None, step=1, attrs=None):
+def get_channelbox():
+    return [c+"."+b for a in "msho" for b in cmds.channelBox("mainChannelBox", q=True, **{"s%sa"%a:True}) or [] for c in cmds.channelBox("mainChannelBox", q=True, **{"%sol"%a:True})]
+
+def collect_anim(Fstart=None, Fend=None, Fstep=1, attrs=None):
     """ Pull out anim data """
     # Validate inputs
     Fstart = cmds.playbackOptions(q=True, min=True) if Fstart == None else Fstart
     Fend = cmds.playbackOptions(q=True, max=True) if Fend == None else Fend
     Fstart, Fend = min(Fstart, Fend), max(Fstart, Fend)
-    Fend += step
+    Fend += Fstep
 
-    step = abs(step)
-    if not step:
-        raise RuntimeError("Step is %s" % step)
+    Fstep = abs(Fstep)
+    if not Fstep:
+        raise RuntimeError("Step is %s" % Fstep)
 
     if attrs is None:
         selection = cmds.ls(sl=True)
@@ -42,7 +45,7 @@ def collect_anim(Fstart=None, Fend=None, step=1, attrs=None):
     while frame <= Fend:
         # cmds.currentTime(frame)
         res[frame] = {a: cmds.getAttr(a, t=frame) for a in attrs}
-        frame += step
+        frame += Fstep
     return res
 
 def drive_anim(data):

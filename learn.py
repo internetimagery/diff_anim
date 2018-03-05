@@ -33,10 +33,14 @@ class Brain(object):
         """ Format dict rows into vector. ie: [{col1:val,col2:val},{col1:val,col2:val}, ... ] """
         cols = s._metadata.get("cols", [])
         res = np.array()
-        for row in data:
-            if not cols:
-                cols = row.keys()
-            res.append(np.array([row[a] for a in cols]))
+        try:
+            for row in data:
+                if not cols:
+                    cols = row.keys()
+                    s._metadata["cols"] = cols
+                res.append(np.array([row[a] for a in cols]))
+        except KeyError:
+            raise RuntimeError("Not all columns present. %s" % cols)
         if not res:
             raise RuntimeError("Empty data.")
         return res
