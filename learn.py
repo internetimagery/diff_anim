@@ -5,7 +5,7 @@ from keras.models import Sequential, model_from_json
 import os.path
 import json
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up tensorflow
 
 class Brain(object):
     def __init__(s):
@@ -14,6 +14,12 @@ class Brain(object):
         s.weights = "weights.hdf5"
         s.struct = "struct.json"
         s.meta = "metadata.json"
+
+    def __getitem__(s, item):
+        return s._metadata[item]
+
+    def __setitem__(s, item, val):
+        return s._metadata[item] = val
 
     def _compile(s):
         s._model.compile(

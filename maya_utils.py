@@ -65,3 +65,18 @@ def import_anim(path, namespace=""):
         del row[frame_col]
         res[fr] = {add_namespace(namespace, a): float(row[a]) for a in row}
     return res
+
+def filter_frames(data1, data2):
+    """ Filter out only data that has frames in common """
+    res1 = []
+    res2 = []
+    cols = None
+    for frame in data1:
+        try:
+            if not cols:
+                cols = set(data1[frame].keys()) & set(data2[frame].keys())
+            res1.append({a: data1[frame][a] for a in cols})
+            res2.append({a: data2[frame][a] for a in cols})
+        except KeyError:
+            pass
+    return res1, res2
