@@ -1,6 +1,7 @@
 # Utilities from within maya
 from __future__ import print_function, division
 import maya.cmds as cmds
+import collections
 import format
 import time
 
@@ -14,15 +15,8 @@ def add_namespace(namespace, name):
         return namespace + ":" + name
     return name
 
-def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_col="[FRAME]"):
-    """ Export animation file """
-
-    header = {
-        "frame_col": frame_col,
-        "scene": cmds.file(q=True, sn=True)
-    }
-    data = []
-
+def collect_anim(Fstart=None, Fend=None, step=1, attrs=None):
+    """ Pull out anim data """
     # Validate inputs
     Fstart = cmds.playbackOptions(q=True, min=True) if Fstart == None else Fstart
     Fend = cmds.playbackOptions(q=True, max=True) if Fend == None else Fend
@@ -44,13 +38,25 @@ def export_anim(path, Fstart=None, Fend=None, step=1, attrs=None, frame_col="[FR
 
     diff = Fend - Fstart
     frame = Fstart
+    res = collections.OrderedDict()
     while frame < Fend:
         cmds.currentTime(frame)
-        d = {strip_namespace(a): cmds.getAttr(a) for a in attrs}
-        d[frame_col] = frame
-        data.append(d)
+        res[frame] = {a: cmds.getAttr(a) for a in attrs}
         frame += step
-    format.save(path, header, data)
+    return res
+
+def export_anim(path, data, frame_col="[FRAME]"):
+    """ Export animation file """
+
+    header = {
+        "frame_col": frame_col,
+        "scene": cmds.file(q=True, sn=True)
+    }
+    res = []
+    for frame, val in data.items():
+        val[frame_col] = frame
+        res.append(val)
+    format.save(path, header, res)
 
 def import_anim(path, namespace=""):
     """ Pull back animation """

@@ -2,10 +2,22 @@
 from __future__ import print_function
 from keras.layers import Dense, Activation
 from keras.models import Sequential, model_from_json
+import numpy as np
 import os.path
 import json
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up tensorflow
+
+def dict_to_list(data, cols):
+    """ Convert dict to list, in order of cols """
+    return np.array([
+        np.array([a[b]
+            for b in cols])
+        for a in data])
+
+def list_to_dict(data, cols):
+    """ Restore array to dict """
+    return [{b: float(c) for b, c in zip(cols, a)} for a in data]
 
 class Brain(object):
     def __init__(s):
@@ -35,7 +47,7 @@ class Brain(object):
         struct_path = os.path.join(path, s.struct)
         meta_path = os.path.join(path, s.meta)
         if not os.path.isfile(meta_path) or not os.path.isfile(weight_path) or not os.path.isfile(struct_path):
-            raise RuntimeError("Weights, meta, and structs cannot be found at %s" % path)
+            raise OSError("Weights, meta, and structs cannot be found at %s" % path)
         with open(struct_path, "r") as f:
             s._model = model_from_json(f.read())
         with open(meta_path, "r") as f:
