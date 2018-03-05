@@ -1,6 +1,7 @@
 # GUI
 from __future__ import print_function
 import maya.cmds as cmds
+import numpy as np
 import maya_utils
 import os.path
 import learn
@@ -70,13 +71,17 @@ class Window(object):
 
         try:
             brain = learn.Brain().load_state(train_path)
+            print("Loaded previous instance.")
         except OSError:
+            print("Training new instance.")
             brain = learn.Brain()
-            brain["cols"] = source_data[0].keys() # record keys
-
+            for key in source_data:
+                brain["cols"] = source_data[key].keys() # record keys
+                break
         # Format data into vectors
-        source_data = learn.dict_to_list(source_data, brain["cols"])
-        expect_data = learn.dict_to_list(expect_data, brain["cols"])
+        frames = source_data.keys() # Maintain frame order and column order
+        source_data = np.array([np.array([source_data[a][b] for b in brain["cols"]]) for a in frames])
+        expect_data = np.array([np.array([expect_data[a][b] for b in brain["cols"]]) for a in frames])
 
         brain.train(source_data, expect_data).save_state(train_path)
         print("Training complete. Accuracy:", brain.evaluate(source_data, expect_data))
@@ -91,12 +96,10 @@ class Window(object):
         brain = learn.Brain().load_state(path)
 
         data = maya_utils.collect_anim()
-        frame_order = data.keys()
-        format_dict = (data[a] for a in frame_order)
-        keys = brain.predict(learn.dict_to_list(format_dict, brain["cols"]))
+        frames = data.keys()
+        format_dict = np.array([np.array([data[a][b] for b in brain["cols"]]) for a in frames])
+        keys = brain.predict(format_dict)
 
-        keys = {b: a for a, b in zip(learn.list_to_dict(keys, brain["cols"]), frame_order)}
-
-        for frame in keys:
-            for attr, val in keys[frame].items():
-                cmds.setKeyframe(attr, v=val, t=frame)
+        for frame, row in zip(frames, keys):
+            for attr, val in zip(brain["cols"], row):
+                cmds.setKeyframe(attr, v=float(val), t=frame)

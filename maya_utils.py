@@ -74,15 +74,15 @@ def import_anim(path, namespace=""):
 
 def filter_frames(data1, data2):
     """ Filter out only data that has frames and attributes in common """
-    res1 = []
-    res2 = []
+    res1 = {}
+    res2 = {}
     cols = None
     for frame in data1:
         try:
             if not cols:
                 cols = set(data1[frame].keys()) & set(data2[frame].keys())
-            res1.append({a: data1[frame][a] for a in cols})
-            res2.append({a: data2[frame][a] for a in cols})
+            res1[frame] = {a: data1[frame][a] for a in cols}
+            res2[frame] = {a: data2[frame][a] for a in cols}
         except KeyError:
             pass
     return res1, res2

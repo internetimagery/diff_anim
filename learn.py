@@ -2,22 +2,10 @@
 from __future__ import print_function
 from keras.layers import Dense, Activation
 from keras.models import Sequential, model_from_json
-import numpy as np
 import os.path
 import json
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up tensorflow
-
-def dict_to_list(data, cols):
-    """ Convert dict to list, in order of cols """
-    return np.array([
-        np.array([a[b]
-            for b in cols])
-        for a in data])
-
-def list_to_dict(data, cols):
-    """ Restore array to dict """
-    return [{b: float(c) for b, c in zip(cols, a)} for a in data]
 
 class Brain(object):
     def __init__(s):
@@ -72,7 +60,7 @@ class Brain(object):
         return s
 
     def train(s, features, labels, epochs=3000, debug=False):
-        if not features or not labels:
+        if not len(features) or not len(labels):
             raise RuntimeError("Provided no features or labels")
         if not s._model:
             s._model = model = Sequential()
@@ -85,14 +73,14 @@ class Brain(object):
         return s
 
     def evaluate(s, features, labels, debug=False):
-        if not features or not labels:
+        if not len(features) or not len(labels):
             raise RuntimeError("Provided no features or labels")
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         return s._model.evaluate(features, labels, verbose=1 if debug else 0)
 
     def predict(s, features):
-        if not features:
+        if not len(features):
             raise RuntimeError("Provided no features or labels")
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
