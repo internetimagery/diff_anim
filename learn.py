@@ -23,9 +23,9 @@ class Brain(object):
 
     def _compile(s):
         s._model.compile(
-            optimizer="RMSprop",
-            # optimizer="adam",
-            loss="mse",
+            # optimizer="RMSprop",
+            optimizer="adam",
+            loss="mean_squared_logarithmic_error",
             metrics=["accuracy"])
 
     def load_state(s, path):
@@ -65,6 +65,7 @@ class Brain(object):
         if not s._model:
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
+            model.add(Dense(512))
             model.add(Dense(512))
             model.add(Dense(len(labels[0])))
             s._compile()
