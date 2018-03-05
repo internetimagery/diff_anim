@@ -8,6 +8,7 @@ def main():
 
     b = learn.Brain()
     # b.train(features, labels)
+    # b.save_state("/usr/home/jdixon/Documents/test/dataa")
     b.load_state("/usr/home/jdixon/Documents/test/dataa")
 
     print "accuracy", b.evaluate(features, labels)
