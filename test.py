@@ -7,8 +7,8 @@ def main():
     labels = np.array([np.array([b*c for b, c in enumerate(a)]) for a in features])
 
     b = learn.Brain()
-    b.train(features, labels).save_state("/usr/home/jdixon/Documents/test/dataa")
-    # b.load_state("/usr/home/jdixon/Documents/test/dataa")
+    # b.train(features, labels).save_state("/usr/home/jdixon/Documents/test/dataa")
+    b.load_state("/usr/home/jdixon/Documents/test/dataa")
 
     print "accuracy", b.evaluate(features, labels)
     print "expect", [1*0, 2*1, 3*2]
