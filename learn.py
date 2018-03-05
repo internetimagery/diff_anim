@@ -22,7 +22,8 @@ class Brain(object):
             model.add(Dense(512))
             model.add(Dense(len(labels[0])))
             model.compile(
-                optimizer="adam",
+                optimizer="RMSprop",
+                # optimizer="adam",
                 loss="mse",
                 metrics=["accuracy"])
 
