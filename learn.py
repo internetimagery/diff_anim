@@ -81,7 +81,7 @@ class Brain(object):
         labels = s._format_named(labels)
         if not s._model:
             s._model = model = Sequential()
-            model.add(Dense(512, input_dim=len(features[0])))
+            model.add(Dense(512, input_dim=len(features[0]), activation="softmax"))
             model.add(Dense(512))
             model.add(Dense(256))
             model.add(Dense(len(labels[0])))
