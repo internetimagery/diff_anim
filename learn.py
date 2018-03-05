@@ -30,15 +30,15 @@ class Brain(object):
             metrics=["accuracy"])
 
     def _format_named(s, data):
-        """ Format dict list into list list. """
-        if not data:
-            raise RuntimeError("Empty data.")
+        """ Format dict rows into vector. ie: [{col1:val,col2:val},{col1:val,col2:val}, ... ] """
         cols = s._metadata.get("cols", [])
         res = np.array()
         for row in data:
             if not cols:
                 cols = row.keys()
             res.append(np.array([row[a] for a in cols]))
+        if not res:
+            raise RuntimeError("Empty data.")
         return res
 
     def load_state(s, path):

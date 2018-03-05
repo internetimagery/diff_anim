@@ -99,6 +99,4 @@ class Window(object):
         format_dict = [data[a] for a in frames]
         keys = brain.predict(format_dict)
 
-        for frame, row in zip(frames, keys):
-            for attr, val in row.items():
-                cmds.setKeyframe(attr, v=val, t=frame)
+        maya_utils.drive_anim({a: b for a, b in zip(frames, keys)})

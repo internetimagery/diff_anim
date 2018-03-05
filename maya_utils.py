@@ -39,11 +39,16 @@ def collect_anim(Fstart=None, Fend=None, step=1, attrs=None):
     diff = Fend - Fstart
     frame = Fstart
     res = collections.OrderedDict()
-    while frame < Fend:
-        cmds.currentTime(frame)
-        res[frame] = {a: cmds.getAttr(a) for a in attrs}
+    while frame <= Fend:
+        # cmds.currentTime(frame)
+        res[frame] = {a: cmds.getAttr(a, t=frame) for a in attrs}
         frame += step
     return res
+
+def drive_anim(data):
+    for frame in data:
+        for attr, val in data[frame].items():
+            cmds.setKeyframe(attr, v=val, t=frame)
 
 def export_anim(path, data, frame_col="[FRAME]"):
     """ Export animation file """
