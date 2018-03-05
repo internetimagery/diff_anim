@@ -3,6 +3,7 @@ from __future__ import print_function
 from keras.layers import Dense, Activation
 from keras.models import Sequential, model_from_json
 import os.path
+import json
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up
 
@@ -11,6 +12,7 @@ class Brain(object):
         s._model = None
         s.weights = "weights.hdf5"
         s.struct = "struct.json"
+        s.meta = "metadata.json"
 
     def _compile(s):
         s._model.compile(
@@ -24,10 +26,13 @@ class Brain(object):
             raise RuntimeError("Path does not exist: %s" % path)
         weight_path = os.path.join(path, s.weights)
         struct_path = os.path.join(path, s.struct)
-        if not os.path.isfile(weight_path) or not os.path.isfile(struct_path):
-            raise RuntimeError("Weights and structs cannot be found at %s" % path)
+        meta_path = os.path.join(path, s.meta)
+        if not os.path.isfile(meta_path) not os.path.isfile(weight_path) or not os.path.isfile(struct_path):
+            raise RuntimeError("Weights, meta, and structs cannot be found at %s" % path)
         with open(struct_path, "r") as f:
             s._model = model_from_json(f.read())
+        with open(meta_path, "r") as f:
+            metadata = json.load(f)
         s._model.load_weights(weight_path)
         s._compile()
         return s
@@ -39,8 +44,11 @@ class Brain(object):
             raise RuntimeError("Path does not exist: %s" % path)
         weight_path = os.path.join(path, s.weights)
         struct_path = os.path.join(path, s.struct)
+        meta_path = os.path.join(path, s.meta)
         with open(struct_path, "w") as f:
             f.write(s._model.to_json())
+        with open(meta_path, "w") as f:
+            json.dump({}, f, indent=4)
         s._model.save_weights(weight_path)
         return s
 
