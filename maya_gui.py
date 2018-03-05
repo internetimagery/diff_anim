@@ -20,7 +20,7 @@ class PathBrowse(object):
 class FrameRange(object):
     def __init__(s):
         s._gui = cmds.floatFieldGrp(
-            nf=3, pre=2, l="Frame Range (start / end / step)"
+            nf=3, pre=2, l="Frames (start / end / step)",
             v1=cmds.playbackOptions(q=True, min=True),
             v2=cmds.playbackOptions(q=True, max=True),
             v3=1.0)

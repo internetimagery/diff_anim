@@ -24,15 +24,15 @@ class Brain(object):
 
     def _compile(s):
         s._model.compile(
-            # optimizer="RMSprop",
-            optimizer="adam",
+            optimizer="RMSprop",
+            # optimizer="adam",
             loss="mean_squared_logarithmic_error",
             metrics=["accuracy"])
 
     def _format_named(s, data):
         """ Format dict rows into vector. ie: [{col1:val,col2:val},{col1:val,col2:val}, ... ] """
         cols = s._metadata.get("cols", [])
-        res = np.array()
+        res = []
         try:
             for row in data:
                 if not cols:
@@ -43,7 +43,7 @@ class Brain(object):
             raise RuntimeError("Not all columns present. %s" % cols)
         if not res:
             raise RuntimeError("Empty data.")
-        return res
+        return np.array(res)
 
     def load_state(s, path):
         if not os.path.isdir(path):
@@ -81,13 +81,14 @@ class Brain(object):
         labels = s._format_named(labels)
         if not s._model:
             s._model = model = Sequential()
-            model.add(Dense(512, input_dim=len(features[0]), activation="softmax"))
+            model.add(Dense(1024, input_dim=len(features[0]), activation="relu", batch_size=1))
             model.add(Dense(512))
             model.add(Dense(256))
             model.add(Dense(len(labels[0])))
             s._compile()
         print("Training. Please wait...")
-        s._model.fit(features, labels, epochs=epochs, verbose=1 if debug else 0)
+        res = s._model.fit(features, labels, epochs=epochs, verbose=1 if debug else 0)
+        print(dir(res))
         return s
 
     def evaluate(s, features, labels, debug=False):
