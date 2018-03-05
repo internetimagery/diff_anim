@@ -72,6 +72,8 @@ class Brain(object):
         return s
 
     def train(s, features, labels, epochs=3000, debug=False):
+        if not features or not labels:
+            raise RuntimeError("Provided no features or labels")
         if not s._model:
             s._model = model = Sequential()
             model.add(Dense(512, input_dim=len(features[0])))
@@ -83,11 +85,15 @@ class Brain(object):
         return s
 
     def evaluate(s, features, labels, debug=False):
+        if not features or not labels:
+            raise RuntimeError("Provided no features or labels")
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         return s._model.evaluate(features, labels, verbose=1 if debug else 0)
 
     def predict(s, features):
+        if not features:
+            raise RuntimeError("Provided no features or labels")
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         return s._model.predict(features)
