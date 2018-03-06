@@ -45,6 +45,7 @@ def collect_anim(Fstart=None, Fend=None, Fstep=1, attrs=None):
     while frame <= Fend:
         # cmds.currentTime(frame)
         res[frame] = {a: cmds.getAttr(a, t=frame) for a in attrs}
+        # res[frame] = {strip_namespace(a): cmds.getAttr(a, t=frame) for a in attrs}
         frame += Fstep
     return res
 

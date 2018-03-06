@@ -100,8 +100,14 @@ class Window(object):
         source_data = [source_data[a] for a in frames]
         expect_data = [expect_data[a] for a in frames]
 
-        brain.train(source_data, expect_data).save_state(train_path)
-        print("Training complete. Accuracy:", brain.evaluate(source_data, expect_data))
+        for i in range(10):
+            brain.train(source_data, expect_data)
+            acc = brain.evaluate(source_data, expect_data)[1]
+            if acc > 0.7:
+                break
+            print("Round %s. Current accuracy:" % i, acc)
+        print("Training complete. Accuracy:", acc)
+        brain.save_state(train_path)
 
     def apply(s, *_):
         """ Apply training to animation """
@@ -112,10 +118,11 @@ class Window(object):
         print("Applying animation. \"This is what we've trained for!\"")
 
         brain = learn.Brain().load_state(path)
+        sel = maya_utils.get_channelbox()
 
         data = maya_utils.collect_anim(Fstart=Fstart, Fend=Fend, Fstep=Fstep)
         frames = data.keys()
         format_dict = [data[a] for a in frames]
         keys = brain.predict(format_dict)
 
-        maya_utils.drive_anim({a: b for a, b in zip(frames, keys)})
+        maya_utils.drive_anim({a: {maya_utils.add_namespace("", c): b[c] for c in b if c in sel} for a, b in zip(frames, keys)})

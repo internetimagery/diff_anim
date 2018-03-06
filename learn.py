@@ -1,6 +1,7 @@
 # Learn the pattern between the inputs
 from __future__ import print_function
-from keras.layers import Dense, Activation
+from keras import losses
+from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential, model_from_json
 import numpy as np
 import os.path
@@ -24,9 +25,12 @@ class Brain(object):
 
     def _compile(s):
         s._model.compile(
-            optimizer="RMSprop",
-            # optimizer="adam",
-            loss="mean_squared_logarithmic_error",
+            # optimizer="RMSprop",
+            optimizer="adam",
+            # optimizer="SGD",
+            loss="mean_squared_error",
+            # loss="mean_absolute_error",
+            # loss="mean_squared_logarithmic_error",
             metrics=["accuracy"])
 
     def _format_named(s, data):
@@ -39,8 +43,10 @@ class Brain(object):
                     cols = row.keys()
                     s._metadata["cols"] = cols
                 res.append(np.array([row[a] for a in cols]))
-        except KeyError:
+        except KeyError as err:
+            print(err)
             raise RuntimeError("Not all columns present. %s" % cols)
+
         if not res:
             raise RuntimeError("Empty data.")
         return np.array(res)
@@ -76,19 +82,25 @@ class Brain(object):
         s._model.save_weights(weight_path)
         return s
 
-    def train(s, features, labels, epochs=3000, debug=False):
+    def train(s, features, labels, epochs=500, debug=False):
         features = s._format_named(features)
         labels = s._format_named(labels)
         if not s._model:
-            s._model = model = Sequential()
-            model.add(Dense(1024, input_dim=len(features[0]), activation="relu", batch_size=1))
-            model.add(Dense(512))
-            model.add(Dense(256))
-            model.add(Dense(len(labels[0])))
+            s._model = model = Sequential([
+                Dense(256, input_dim=len(features[0])),
+                Dense(256),
+                Dense(256),
+                Dense(len(labels[0]))])
             s._compile()
         print("Training. Please wait...")
-        res = s._model.fit(features, labels, epochs=epochs, verbose=1 if debug else 0)
-        print(res.history)
+        res = s._model.fit(
+            features,
+            labels,
+            batch_size=100,
+            shuffle=True,
+            epochs=epochs,
+            verbose=1 if debug else 0)
+        # print(res.history["acc"])
         return s
 
     def evaluate(s, features, labels, debug=False):
