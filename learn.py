@@ -89,6 +89,7 @@ class Brain(object):
             s._model = model = Sequential([
                 Dense(256, input_dim=len(features[0])),
                 Dense(256),
+                Dense(256, activation="relu"),
                 Dense(256),
                 Dense(len(labels[0]))])
             s._compile()
