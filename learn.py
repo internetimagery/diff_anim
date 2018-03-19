@@ -26,8 +26,8 @@ class Brain(object):
     def _compile(s):
         s._model.compile(
             # optimizer="RMSprop",
-            optimizer="adam",
-            # optimizer="SGD",
+            # optimizer="adam",
+            optimizer="SGD",
             loss="mean_squared_error",
             # loss="mean_absolute_error",
             # loss="mean_squared_logarithmic_error",
@@ -88,7 +88,6 @@ class Brain(object):
         if not s._model:
             s._model = model = Sequential([
                 Dense(256, input_dim=len(features[0])),
-                Dense(256),
                 Dense(256, activation="relu"),
                 Dense(256),
                 Dense(len(labels[0]))])

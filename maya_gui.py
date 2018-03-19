@@ -56,10 +56,20 @@ class Window(object):
         s._train_path_expect = PathBrowse("Expected (anim):", "*.anim", fm=1)
         cmds.button(l="Train", c=s.train)
 
+        # Test
+        test_col = cmds.columnLayout(adj=True, p=tabs)
+        cmds.text(l="Check accuracy.")
+        s._test_path_train = PathBrowse("Training Data (training):", False, fm=3)
+        s._test_path_source = PathBrowse("Source (anim):", "*.anim", fm=1)
+        s._test_path_expect = PathBrowse("Expected (anim):", "*.anim", fm=1)
+        cmds.button(l="Test", c=s.test)
+
+
         cmds.tabLayout(tabs, e=True, tl=[
             (apply_col, "Apply"),
             (export_col, "Export"),
-            (train_col, "Train")])
+            (train_col, "Train"),
+            (test_col, "Test")])
         cmds.showWindow()
 
     def export(s, *_):
@@ -126,3 +136,26 @@ class Window(object):
         keys = brain.predict(format_dict)
 
         maya_utils.drive_anim({a: {maya_utils.add_namespace("", c): b[c] for c in b if c in sel} for a, b in zip(frames, keys)})
+
+    def test(s, *_):
+        """ Check accuracy """
+        train_path = s._test_path_train.get_text()
+        source_path = s._test_path_source.get_text()
+        expect_path = s._test_path_expect.get_text()
+        if not os.path.isdir(train_path) or not os.path.isfile(source_path) or not os.path.isfile(expect_path):
+            raise RuntimeError("One or more paths are invalid.")
+        print("Checking. Please wait.")
+
+        source_data = maya_utils.import_anim(source_path)
+        expect_data = maya_utils.import_anim(expect_path)
+        # Filter out only frames and attributes in common
+        source_data, expect_data = maya_utils.filter_frames(source_data, expect_data)
+
+        # Format data into vectors
+        frames = source_data.keys() # Maintain frame order and column order
+        source_data = [source_data[a] for a in frames]
+        expect_data = [expect_data[a] for a in frames]
+
+        brain = learn.Brain().load_state(train_path)
+        accuracy = brain.evaluate(source_data, expect_data)[1]
+        cmds.confirmDialog(t="Accuracy", m="Predicted accuracy: %s%%" % round(accuracy*100))
