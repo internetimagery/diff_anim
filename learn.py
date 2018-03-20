@@ -16,6 +16,8 @@ class Brain(object):
         s.weights = "weights.hdf5"
         s.struct = "struct.json"
         s.meta = "metadata.json"
+        # s.source = "source.csv"
+        # s.expect = "expect.csv"
 
     def __getitem__(s, item):
         return s._metadata[item]
