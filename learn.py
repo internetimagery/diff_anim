@@ -25,9 +25,9 @@ class Brain(object):
 
     def _compile(s):
         s._model.compile(
-            # optimizer="RMSprop",
+            optimizer="RMSprop",
             # optimizer="adam",
-            optimizer="SGD",
+            # optimizer="SGD",
             loss="mean_squared_error",
             # loss="mean_absolute_error",
             # loss="mean_squared_logarithmic_error",
@@ -39,8 +39,7 @@ class Brain(object):
             row1, row2 = stream.next()
             s._metadata["cols"] = list(set(row1) | set(row2))
         for bef, aft in stream:
-            yield np.array(bef.get(a, 0.0) for a in s._metadata["cols"]),
-                  np.array(aft.get(a, 0.0) for a in s._metadata["cols"])
+            yield np.array([bef.get(a, 0.0) for a in s._metadata["cols"]]), np.array([aft.get(a, 0.0) for a in s._metadata["cols"]])
 
     def _format_named(s, data):
         """ Format dict rows into vector. ie: [{col1:val,col2:val},{col1:val,col2:val}, ... ] """
@@ -97,11 +96,27 @@ class Brain(object):
         features, labels = np.array(features), np.array(labels)
 
         if not s._model:
-            layers = [Dense(len(features[0]), input_dim=len(features[0]))]
-            layers += [Dense(len(features[0])) for _ in range(len(features[0]))]
-            s._model = Sequential(layers)
+            # layers = [Dense(len(features[0]), input_dim=len(features[0]))]
+            # layers += [Dense(len(features[0])) for _ in range(len(features[0]))]
+            # layers = 5
+            # rows = (len(features[0]) ** 2) / layers
+            # hidden_layers = [Dense(len(features[0]), input_dim=len(features[0]))]
+            # hidden_layers += [Dense(rows) for _ in range(layers)]
+            # hidden_layers += [Dense(len(labels[0]))]
+            # print("Building network %s x %s" % (rows, layers))
+            # s._model = Sequential(hidden_layers)
+            s._model = Sequential([
+                Dense(len(features[0]), input_dim=len(features[0])),
+                Dense(len(features)**2),
+                Dense(len(labels[0]))])
+                # Dense(len(features[0]), input_dim=len(features[0])),
+                # Dense(len(features[0])),
+                # Dense(len(features[0])),
+                # Dense(len(features[0]))
+                # ])
             s._compile()
         print("Training. Please wait...")
+
         res = s._model.fit(
             features,
             labels,
@@ -112,7 +127,7 @@ class Brain(object):
         # print(res.history["acc"])
         return s
 
-    def evaluate(s, features, labels, debug=False):
+    def evaluate(s, stream, debug=False):
         features, labels = zip(*s._format_stream(stream))
         features, labels = np.array(features), np.array(labels)
         if not s._model:

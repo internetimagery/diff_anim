@@ -102,10 +102,11 @@ class Window(object):
             print("Training new instance.")
             brain = learn.Brain()
 
-
-        for i, data in enumerate(itertools.tee(data_stream, 10)):
-            brain.train(data_stream)
-            acc = brain.evaluate(data_stream)[1]
+        round_trips = 1 # 10
+        for i, data in enumerate(itertools.tee(data_stream, round_trips)):
+            d1, d2 = itertools.tee(data, 2)
+            brain.train(d1, epochs=100)
+            acc = brain.evaluate(d2)[1]
             if acc > 0.7:
                 break
             print("Round %s. Current accuracy:" % i, acc)
@@ -139,16 +140,8 @@ class Window(object):
             raise RuntimeError("One or more paths are invalid.")
         print("Checking. Please wait.")
 
-        source_data = maya_utils.import_anim(source_path)
-        expect_data = maya_utils.import_anim(expect_path)
-        # Filter out only frames and attributes in common
-        source_data, expect_data = maya_utils.filter_frames(source_data, expect_data)
-
-        # Format data into vectors
-        frames = source_data.keys() # Maintain frame order and column order
-        source_data = [source_data[a] for a in frames]
-        expect_data = [expect_data[a] for a in frames]
+        data = maya_utils.join_streams(maya_utils.load_stream(source_path), maya_utils.load_stream(expect_path))
 
         brain = learn.Brain().load_state(train_path)
-        accuracy = brain.evaluate(source_data, expect_data)[1]
+        accuracy = brain.evaluate(data)[1]
         cmds.confirmDialog(t="Accuracy", m="Predicted accuracy: %s%%" % round(accuracy*100))
