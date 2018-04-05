@@ -33,6 +33,15 @@ class Brain(object):
             # loss="mean_squared_logarithmic_error",
             metrics=["accuracy"])
 
+    def _format_stream(s, stream):
+        """ Expect generator that produce dicts of data """
+        if "cols" not in s._metadata: # Add column headers
+            row1, row2 = stream.next()
+            s._metadata["cols"] = list(set(row1) | set(row2))
+        for bef, aft in stream:
+            yield np.array(bef.get(a, 0.0) for a in s._metadata["cols"]),
+                  np.array(aft.get(a, 0.0) for a in s._metadata["cols"])
+
     def _format_named(s, data):
         """ Format dict rows into vector. ie: [{col1:val,col2:val},{col1:val,col2:val}, ... ] """
         cols = s._metadata.get("cols", [])
