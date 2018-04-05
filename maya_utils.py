@@ -79,14 +79,17 @@ def load_stream(path):
         del row[frame_col]
         yield fr, row
 
-def join_streams(before, after):
-    """ Join two streams matching frames. Assuming frames in order """
-    for bframe, bdata in before:
-        aframe, adata = after.next()
-        while aframe < bframe: # Fast forward after stream to catch up
-            aframe, adata = after.next()
-        while aframe > bframe: # Fast forward before stream to catch up
-            bframe, bdata = before.next()
+def join_streams(before_path, after_path):
+    """ EGON! Join two streams matching frames. Assuming frames in order """
+    before_stream = load_stream(before_path)
+    after_stream = load_stream(after_path)
+
+    for bframe, bdata in before_stream:
+        aframe, adata = after_stream.next()
+        while aframe < bframe: # Fast forward after_stream stream to catch up
+            aframe, adata = after_stream.next()
+        while aframe > bframe: # Fast forward before_stream stream to catch up
+            bframe, bdata = before_stream.next()
         yield bdata, adata
 
 def import_anim(path, namespace=""):
