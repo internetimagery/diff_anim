@@ -60,6 +60,13 @@ def load(path):
         data = [a for a in csv.DictReader(f)]
     return header, data
 
+def load_stream(path):
+    """ Open file. Return header and then data """
+    with open(path, "rb") as f:
+        yield read_header(f)
+        for row in csv.DictReader(f):
+            yield row
+
 def merge(output, *paths):
     """ Merge multiple files into one """
     with open(output, "wb") as o:

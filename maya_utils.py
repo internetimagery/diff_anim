@@ -67,6 +67,18 @@ def export_anim(path, data, frame_col="[FRAME]"):
         res.append(val)
     format.save(path, header, res)
 
+def load_stream(path):
+    """ Split file into "frame", "{data}". Sorting out metadata (frames) """
+    data = format.load_stream(path)
+    header = data.next()
+    frame_col = header.get("frame_col")
+    if not frame_col:
+        raise RuntimeError("Frame column missing...")
+    for row in data:
+        fr = row[frame_col]
+        del row[frame_col]
+        yield fr, row
+
 def import_anim(path, namespace=""):
     """ Pull back animation """
     header, data = format.load(path)
