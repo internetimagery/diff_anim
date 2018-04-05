@@ -91,16 +91,15 @@ class Brain(object):
         s._model.save_weights(weight_path)
         return s
 
-    def train(s, features, labels, epochs=500, debug=False):
-        features = s._format_named(features)
-        labels = s._format_named(labels)
+    def train(s, stream, epochs=500, debug=False):
+
+        features, labels = zip(*s._format_stream(stream))
+        features, labels = np.array(features), np.array(labels)
+
         if not s._model:
-            s._model = model = Sequential([
-                Dense(len(features[0])*4, input_dim=len(features[0]), activation="relu"),
-                Dense(len(features[0])*4, activation="relu"),
-                Dense(len(features[0])*4, activation="relu"),
-                Dense(len(features[0])*4, activation="relu"),
-                Dense(len(labels[0]))])
+            layers = [Dense(len(features[0]), input_dim=len(features[0]))]
+            layers += [Dense(len(features[0])) for _ in range(len(features[0]))]
+            s._model = Sequential(layers)
             s._compile()
         print("Training. Please wait...")
         res = s._model.fit(
@@ -114,8 +113,8 @@ class Brain(object):
         return s
 
     def evaluate(s, features, labels, debug=False):
-        features = s._format_named(features)
-        labels = s._format_named(labels)
+        features, labels = zip(*s._format_stream(stream))
+        features, labels = np.array(features), np.array(labels)
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         return s._model.evaluate(features, labels, verbose=1 if debug else 0)

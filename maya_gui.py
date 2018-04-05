@@ -2,6 +2,7 @@
 from __future__ import print_function
 import maya.cmds as cmds
 import maya_utils
+import itertools
 import os.path
 import learn
 
@@ -91,10 +92,8 @@ class Window(object):
         if not os.path.isdir(train_path) or not os.path.isfile(source_path) or not os.path.isfile(expect_path):
             raise RuntimeError("One or more paths are invalid.")
         print("Training. Please wait. This can take a while.")
-        source_data = maya_utils.import_anim(source_path)
-        expect_data = maya_utils.import_anim(expect_path)
-        # Filter out only frames and attributes in common
-        source_data, expect_data = maya_utils.filter_frames(source_data, expect_data)
+
+        data_stream = itertools.chain(maya_utils.join_streams(source_path, expect_path))
 
         try:
             brain = learn.Brain().load_state(train_path)
@@ -102,17 +101,11 @@ class Window(object):
         except OSError:
             print("Training new instance.")
             brain = learn.Brain()
-            for key in source_data:
-                brain["cols"] = source_data[key].keys() # record keys
-                break
-        # Format data into vectors
-        frames = source_data.keys() # Maintain frame order and column order
-        source_data = [source_data[a] for a in frames]
-        expect_data = [expect_data[a] for a in frames]
 
-        for i in range(10):
-            brain.train(source_data, expect_data)
-            acc = brain.evaluate(source_data, expect_data)[1]
+
+        for i, data in enumerate(itertools.tee(data_stream, 10)):
+            brain.train(data_stream)
+            acc = brain.evaluate(data_stream)[1]
             if acc > 0.7:
                 break
             print("Round %s. Current accuracy:" % i, acc)
