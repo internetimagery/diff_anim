@@ -68,7 +68,7 @@ def export_anim(path, data, frame_col="[FRAME]"):
     format.save(path, header, res)
 
 def load_stream(path):
-    """ Split file into "frame", "{data}". Sorting out metadata (frames) """
+    """ Split file into "frame", "{col: data}". Sorting out metadata (frames) """
     data = format.load_stream(path)
     header = data.next()
     frame_col = header.get("frame_col")
@@ -78,6 +78,16 @@ def load_stream(path):
         fr = row[frame_col]
         del row[frame_col]
         yield fr, row
+
+def join_streams(before, after):
+    """ Join two streams matching frames. Assuming frames in order """
+    for bframe, bdata in before:
+        aframe, adata = after.next()
+        while aframe < bframe: # Fast forward after stream to catch up
+            aframe, adata = after.next()
+        while aframe > bframe: # Fast forward before stream to catch up
+            bframe, bdata = before.next()
+        yield bdata, adata
 
 def import_anim(path, namespace=""):
     """ Pull back animation """
