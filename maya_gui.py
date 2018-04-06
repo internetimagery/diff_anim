@@ -102,10 +102,10 @@ class Window(object):
             print("Training new instance.")
             brain = learn.Brain()
 
-        round_trips = 1 # 10
+        round_trips = 10
         for i, data in enumerate(itertools.tee(data_stream, round_trips)):
             d1, d2 = itertools.tee(data, 2)
-            brain.train(d1, epochs=100)
+            brain.train(d1)
             acc = brain.evaluate(d2)[1]
             if acc > 0.7:
                 break
@@ -140,7 +140,7 @@ class Window(object):
             raise RuntimeError("One or more paths are invalid.")
         print("Checking. Please wait.")
 
-        data = maya_utils.join_streams(maya_utils.load_stream(source_path), maya_utils.load_stream(expect_path))
+        data = itertools.chain(maya_utils.join_streams(maya_utils.load_stream(source_path), maya_utils.load_stream(expect_path)))
 
         brain = learn.Brain().load_state(train_path)
         accuracy = brain.evaluate(data)[1]

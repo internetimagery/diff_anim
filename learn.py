@@ -90,7 +90,7 @@ class Brain(object):
         s._model.save_weights(weight_path)
         return s
 
-    def train(s, stream, epochs=500, debug=False):
+    def train(s, stream, epochs=200, debug=False):
 
         features, labels = zip(*s._format_stream(stream))
         features, labels = np.array(features), np.array(labels)
@@ -105,10 +105,11 @@ class Brain(object):
             # hidden_layers += [Dense(len(labels[0]))]
             # print("Building network %s x %s" % (rows, layers))
             # s._model = Sequential(hidden_layers)
+            num_features = len(features[0])
             s._model = Sequential([
-                Dense(len(features[0]), input_dim=len(features[0])),
-                Dense(len(features)**2),
-                Dense(len(labels[0]))])
+                Dense(num_features**2, input_dim=num_features),
+                Dense(num_features*2),
+                Dense(num_features)])
                 # Dense(len(features[0]), input_dim=len(features[0])),
                 # Dense(len(features[0])),
                 # Dense(len(features[0])),
