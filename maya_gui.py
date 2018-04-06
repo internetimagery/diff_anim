@@ -92,28 +92,30 @@ class Window(object):
         expect_path = s._train_path_expect.get_text()
         if not os.path.isdir(train_path) or not os.path.isfile(source_path) or not os.path.isfile(expect_path):
             raise RuntimeError("One or more paths are invalid.")
-        print("Training. Please wait. This can take a while.")
+        print("Training. Please wait. This can take a while. Press Esc to abort.")
 
         data_stream = itertools.chain(maya_utils.join_streams(source_path, expect_path))
 
         brain = learn.Brain(train_path)
 
-        round_trips = 5
         progctrl = mel.eval("$tmp = $gMainProgressBar")
-        cmds.progressBar(progctrl, e=True, bp=True, st="Thinking...", max=round_trips, ii=True)
+        cmds.progressBar(progctrl, e=True, bp=True, st="Thinking...", max=100, ii=True)
+        def update(prog):
+            if cmds.progressBar(progctrl, q=True, ic=True):
+                raise StopIteration
+            if prog % 1:
+                cmds.progressBar(progctrl, e=True, progress=prog*100)
+
+        cmds.refresh(suspend=True)
         try:
-            for i, data in enumerate(itertools.tee(data_stream, round_trips)):
-                if cmds.progressBar(progctrl, q=True, ic=True):
-                    break
-                d1, d2 = itertools.tee(data, 2)
-                brain.train(d1)
-                acc = brain.evaluate(d2)[1]
-                if acc > 0.7:
-                    break
-                print("Round %s. Current accuracy:" % i, acc)
-                cmds.progressBar(progctrl, e=True, s=i)
-            print("Training complete. Accuracy:", acc)
+            d1, d2 = itertools.tee(data_stream, 2)
+            brain.train(d1, epochs=500, callback=update)
+            acc = brain.evaluate(d2)[1]
+            print("Training complete. Estimated accuracy:", acc)
+        except StopIteration:
+            print("Training cancelled!")
         finally:
+            cmds.refresh(suspend=False)
             cmds.progressBar(progctrl, e=True, ep=True)
 
     def apply(s, *_):

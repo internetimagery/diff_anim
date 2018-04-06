@@ -3,7 +3,6 @@ from __future__ import print_function
 from keras import losses, callbacks
 from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential, load_model
-from keras.utils import plot_model
 import numpy as np
 import os.path
 import json
@@ -77,8 +76,13 @@ class Brain(object):
             raise OSError("Data cannot be found at %s" % path)
         with open(meta_path, "r") as f:
             s._metadata = json.load(f)
+
+        best = os.path.join(s._path, s.best)
+        # if os.path.isfile(best):
+        #     s._model = load_model(best)
+        # else:
         s._model = load_model(state_path)
-        s._compile()
+        # s._compile()
         return s
 
     def save_state(s, path=""):
@@ -93,10 +97,9 @@ class Brain(object):
         with open(meta_path, "w") as f:
             json.dump(s._metadata, f, indent=4)
         s._model.save(state_path)
-        plot_model(s._model, to_file=os.path.join(path, "model.png"))
         return s
 
-    def train(s, stream, epochs=200, debug=False):
+    def train(s, stream, epochs=200, callback=(lambda x: x), debug=False):
 
         features, labels = zip(*s._format_stream(stream))
         features, labels = np.array(features), np.array(labels)
@@ -110,11 +113,10 @@ class Brain(object):
             s._compile()
         print("Training. Please wait...")
 
-        # best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, verbose=1, monitor="val_acc")
-        # stop_callback = callbacks.EarlyStopping()
-
-        best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, verbose=1, monitor="acc")
-        stop_callback = callbacks.EarlyStopping(monitor="loss")
+        prog = 1.0 / epochs
+        best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, monitor="acc")
+        # stop_callback = callbacks.EarlyStopping(monitor="loss")
+        epoch_callback = callbacks.LambdaCallback(on_epoch_end=lambda x,_: callback(x * prog))
 
         res = s._model.fit(
             features,
@@ -122,7 +124,7 @@ class Brain(object):
             shuffle=True,
             # validation_split=0.5,
             epochs=epochs,
-            callbacks=[best_callback, stop_callback],
+            callbacks=[best_callback, epoch_callback],#, stop_callback],
             verbose=1 if debug else 0)
 
         s.save_state()
@@ -134,12 +136,19 @@ class Brain(object):
         features, labels = np.array(features), np.array(labels)
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
+        best = os.path.join(s._path, s.best)
+        if os.path.isfile(best):
+            return load_model(best).evaluate(features, labels, verbose=1 if debug else 0)
         return s._model.evaluate(features, labels, verbose=1 if debug else 0)
 
     def predict(s, features):
         features = s._format_named(features)
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
-        res = s._model.predict(features)
+        best = os.path.join(s._path, s.best)
+        if os.path.isfile(best):
+            res = load_model(best).predict(features)
+        else:
+            res = s._model.predict(features)
         # reconstruct named columns
         return [{c: float(b) for b, c in zip(a, s._metadata["cols"])} for a in res]
