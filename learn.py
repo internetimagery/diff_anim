@@ -3,6 +3,7 @@ from __future__ import print_function
 from keras import losses, callbacks
 from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential, load_model
+from keras.utils import plot_model
 import numpy as np
 import os.path
 import json
@@ -38,7 +39,7 @@ class Brain(object):
             loss="mean_squared_error",
             # loss="mean_absolute_error",
             # loss="mean_squared_logarithmic_error",
-            metrics=["accuracy"])
+            metrics=["acc"])
 
     def _format_stream(s, stream):
         """ Expect generator that produce dicts of data """
@@ -92,6 +93,7 @@ class Brain(object):
         with open(meta_path, "w") as f:
             json.dump(s._metadata, f, indent=4)
         s._model.save(state_path)
+        plot_model(s._model, to_file=os.path.join(path, "model.png"))
         return s
 
     def train(s, stream, epochs=200, debug=False):
@@ -100,39 +102,27 @@ class Brain(object):
         features, labels = np.array(features), np.array(labels)
 
         if not s._model:
-            # layers = [Dense(len(features[0]), input_dim=len(features[0]))]
-            # layers += [Dense(len(features[0])) for _ in range(len(features[0]))]
-            # layers = 5
-            # rows = (len(features[0]) ** 2) / layers
-            # hidden_layers = [Dense(len(features[0]), input_dim=len(features[0]))]
-            # hidden_layers += [Dense(rows) for _ in range(layers)]
-            # hidden_layers += [Dense(len(labels[0]))]
-            # print("Building network %s x %s" % (rows, layers))
-            # s._model = Sequential(hidden_layers)
             num_features = len(features[0])
             s._model = Sequential([
                 Dense(num_features**2, input_dim=num_features),
                 Dense(num_features*2),
                 Dense(num_features)])
-                # Dense(len(features[0]), input_dim=len(features[0])),
-                # Dense(len(features[0])),
-                # Dense(len(features[0])),
-                # Dense(len(features[0]))
-                # ])
             s._compile()
         print("Training. Please wait...")
 
         # best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, verbose=1, monitor="val_acc")
         # stop_callback = callbacks.EarlyStopping()
 
+        best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, verbose=1, monitor="acc")
+        stop_callback = callbacks.EarlyStopping(monitor="loss")
+
         res = s._model.fit(
             features,
             labels,
-            batch_size=100,
             shuffle=True,
-            # validation_split=0.1,
+            # validation_split=0.5,
             epochs=epochs,
-            # callbacks=[best_callback, stop_callback],
+            callbacks=[best_callback, stop_callback],
             verbose=1 if debug else 0)
 
         s.save_state()

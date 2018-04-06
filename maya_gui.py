@@ -1,6 +1,7 @@
 # GUI
 from __future__ import print_function
 import maya.cmds as cmds
+import maya.mel as mel
 import maya_utils
 import itertools
 import os.path
@@ -97,15 +98,23 @@ class Window(object):
 
         brain = learn.Brain(train_path)
 
-        round_trips = 10
-        for i, data in enumerate(itertools.tee(data_stream, round_trips)):
-            d1, d2 = itertools.tee(data, 2)
-            brain.train(d1)
-            acc = brain.evaluate(d2)[1]
-            if acc > 0.7:
-                break
-            print("Round %s. Current accuracy:" % i, acc)
-        print("Training complete. Accuracy:", acc)
+        round_trips = 5
+        progctrl = mel.eval("$tmp = $gMainProgressBar")
+        cmds.progressBar(progctrl, e=True, bp=True, st="Thinking...", max=round_trips, ii=True)
+        try:
+            for i, data in enumerate(itertools.tee(data_stream, round_trips)):
+                if cmds.progressBar(progctrl, q=True, ic=True):
+                    break
+                d1, d2 = itertools.tee(data, 2)
+                brain.train(d1)
+                acc = brain.evaluate(d2)[1]
+                if acc > 0.7:
+                    break
+                print("Round %s. Current accuracy:" % i, acc)
+                cmds.progressBar(progctrl, e=True, s=i)
+            print("Training complete. Accuracy:", acc)
+        finally:
+            cmds.progressBar(progctrl, e=True, ep=True)
 
     def apply(s, *_):
         """ Apply training to animation """
