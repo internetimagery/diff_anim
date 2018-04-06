@@ -100,12 +100,17 @@ class Window(object):
 
         progctrl = mel.eval("$tmp = $gMainProgressBar")
         cmds.progressBar(progctrl, e=True, bp=True, st="Thinking...", max=100, ii=True)
-        def update(prog):
-            if cmds.progressBar(progctrl, q=True, ic=True):
-                raise StopIteration
+        best_acc = [0]
+        def update(prog, acc):
+            best_acc[0] = max(acc, best_acc[0])
             prog *= 100
             if not prog % 1:
+                if cmds.progressBar(progctrl, q=True, ic=True):
+                    raise StopIteration
+                print("Training %s%%. Accuracy %s%%" % (int(prog), best_acc[0]))
                 cmds.progressBar(progctrl, e=True, progress=prog)
+                if best_acc[0] == 1.0:
+                    raise StopIteration
 
         cmds.refresh(suspend=True)
         try:

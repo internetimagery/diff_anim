@@ -116,7 +116,7 @@ class Brain(object):
         prog = 1.0 / epochs
         best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, monitor="acc")
         # stop_callback = callbacks.EarlyStopping(monitor="loss")
-        epoch_callback = callbacks.LambdaCallback(on_epoch_end=lambda x,_: callback(x * prog))
+        epoch_callback = callbacks.LambdaCallback(on_epoch_end=lambda x,y: callback(x * prog, y["acc"]))
 
         res = s._model.fit(
             features,
