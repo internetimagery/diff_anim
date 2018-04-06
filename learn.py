@@ -1,6 +1,6 @@
 # Learn the pattern between the inputs
 from __future__ import print_function
-from keras import losses
+from keras import losses, callbacks
 from keras.layers import Dense, Activation, Dropout
 from keras.models import Sequential, load_model
 import numpy as np
@@ -10,11 +10,19 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" # shut up tensorflow
 
 class Brain(object):
-    def __init__(s):
+    def __init__(s, path):
+        s._path = path
         s._model = None
         s._metadata = {}
         s.state = "state.hdf5"
+        s.best = "best.hdf5"
         s.meta = "metadata.json"
+
+        if not os.path.isdir(path):
+            raise RuntimeError("Path not found %s" % path)
+
+        if os.listdir(path):
+            s.load_state(path)
 
     def __getitem__(s, item):
         return s._metadata[item]
@@ -61,6 +69,7 @@ class Brain(object):
     def load_state(s, path):
         if not os.path.isdir(path):
             raise RuntimeError("Path does not exist: %s" % path)
+        s._path = path
         state_path = os.path.join(path, s.state)
         meta_path = os.path.join(path, s.meta)
         if not os.path.isfile(meta_path) or not os.path.isfile(state_path):
@@ -71,11 +80,13 @@ class Brain(object):
         s._compile()
         return s
 
-    def save_state(s, path):
+    def save_state(s, path=""):
+        path = path or s._path
         if not s._model:
             raise RuntimeError("Machine not yet trained.")
         if not os.path.isdir(path):
             raise RuntimeError("Path does not exist: %s" % path)
+        s._path = path
         state_path = os.path.join(path, s.state)
         meta_path = os.path.join(path, s.meta)
         with open(meta_path, "w") as f:
@@ -111,13 +122,20 @@ class Brain(object):
             s._compile()
         print("Training. Please wait...")
 
+        # best_callback = callbacks.ModelCheckpoint(os.path.join(s._path, s.best), save_best_only=True, verbose=1, monitor="val_acc")
+        # stop_callback = callbacks.EarlyStopping()
+
         res = s._model.fit(
             features,
             labels,
             batch_size=100,
             shuffle=True,
+            # validation_split=0.1,
             epochs=epochs,
+            # callbacks=[best_callback, stop_callback],
             verbose=1 if debug else 0)
+
+        s.save_state()
         # print(res.history["acc"])
         return s
 

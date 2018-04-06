@@ -95,12 +95,7 @@ class Window(object):
 
         data_stream = itertools.chain(maya_utils.join_streams(source_path, expect_path))
 
-        try:
-            brain = learn.Brain().load_state(train_path)
-            print("Loaded previous instance.")
-        except OSError:
-            print("Training new instance.")
-            brain = learn.Brain()
+        brain = learn.Brain(train_path)
 
         round_trips = 10
         for i, data in enumerate(itertools.tee(data_stream, round_trips)):
@@ -111,7 +106,6 @@ class Window(object):
                 break
             print("Round %s. Current accuracy:" % i, acc)
         print("Training complete. Accuracy:", acc)
-        brain.save_state(train_path)
 
     def apply(s, *_):
         """ Apply training to animation """
@@ -121,7 +115,7 @@ class Window(object):
             raise RuntimeError("Path does not exist: %s" % path)
         print("Applying animation. \"This is what we've trained for!\"")
 
-        brain = learn.Brain().load_state(path)
+        brain = learn.Brain(path)
         sel = maya_utils.get_channelbox()
 
         data = maya_utils.collect_anim(Fstart=Fstart, Fend=Fend, Fstep=Fstep)
@@ -142,6 +136,6 @@ class Window(object):
 
         data_stream = itertools.chain(maya_utils.join_streams(source_path, expect_path))
 
-        brain = learn.Brain().load_state(train_path)
+        brain = learn.Brain(train_path)
         accuracy = brain.evaluate(data_stream)[1]
         cmds.confirmDialog(t="Accuracy", m="Predicted accuracy: %s%%" % round(accuracy*100))
