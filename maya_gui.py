@@ -103,8 +103,9 @@ class Window(object):
         def update(prog):
             if cmds.progressBar(progctrl, q=True, ic=True):
                 raise StopIteration
-            if prog % 1:
-                cmds.progressBar(progctrl, e=True, progress=prog*100)
+            prog *= 100
+            if not prog % 1:
+                cmds.progressBar(progctrl, e=True, progress=prog)
 
         cmds.refresh(suspend=True)
         try:
