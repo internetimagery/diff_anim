@@ -140,8 +140,8 @@ class Window(object):
             raise RuntimeError("One or more paths are invalid.")
         print("Checking. Please wait.")
 
-        data = itertools.chain(maya_utils.join_streams(maya_utils.load_stream(source_path), maya_utils.load_stream(expect_path)))
+        data_stream = itertools.chain(maya_utils.join_streams(source_path, expect_path))
 
         brain = learn.Brain().load_state(train_path)
-        accuracy = brain.evaluate(data)[1]
+        accuracy = brain.evaluate(data_stream)[1]
         cmds.confirmDialog(t="Accuracy", m="Predicted accuracy: %s%%" % round(accuracy*100))
